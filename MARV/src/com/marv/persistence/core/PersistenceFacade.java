@@ -1,5 +1,13 @@
 package com.marv.persistence.core;
 
+import java.util.ArrayList;
+
+import com.marv.business.entities.AuctionItem;
+import com.marv.business.entities.DomainObject;
+import com.marv.business.entities.User;
+import com.marv.persistence.mappers.AuctionItemMapper;
+import com.marv.persistence.mappers.UserMapper;
+
 public class PersistenceFacade implements Cloneable {
 
 	/**
@@ -11,7 +19,7 @@ public class PersistenceFacade implements Cloneable {
 	
 	private PersistenceFacade() {
 		// private constructor prevents instantiation by untrusted callers
-		mapperFactory = new MapperFactory();
+		mapperFactory = MapperFactory.getInstance();
 	}
 	
 	/**
@@ -34,15 +42,23 @@ public class PersistenceFacade implements Cloneable {
 		return mapperFactory.getMapper(domainClassName).find(id);
 	}
 	
+	public ArrayList<? extends DomainObject> findAll(Class<?> domainClassName) {
+		return mapperFactory.getMapper(domainClassName).findAll();
+	}
+	
 	/**
 	 * Inserts the domain object provided in the parameter into the database.
 	 * 
 	 * @param domainObject	domain object to be saved.
 	 * @return				the id of the last inserted row.
 	 */
-//	public long insert(Object domainObject) {
-//		return mapperFactory.getMapper(domainObject).insert(domainObject);
-//	}
+	public long insert(DomainObject domainObject) {
+		return mapperFactory.getMapper(domainObject).insert(domainObject);
+	}
+	
+	public long insertTransaction(DomainObject domainObject) {
+		return mapperFactory.getMapper(domainObject).insertTransaction(domainObject);
+	}
 	
 	/**
 	 * Updates the database record corresponding to the domain object provided in the parameter.
@@ -50,9 +66,9 @@ public class PersistenceFacade implements Cloneable {
 	 * @param domainObject	domain object to be saved.
 	 * @return				quantity of rows updated.
 	 */
-//	public int update(Object domainObject) {
-//		return mapperFactory.getMapper(domainObject).update(domainObject);
-//	}
+	public int update(DomainObject domainObject) {
+		return mapperFactory.getMapper(domainObject).update(domainObject);
+	}
 	
 	/**
 	 * Deletes the domain object provided in the parameter from the database.
@@ -60,7 +76,26 @@ public class PersistenceFacade implements Cloneable {
 	 * @param domainObject	domain object to be deleted.
 	 * @return				quantity of rows deleted.
 	 */
-//	public int delete(Object domainObject) {
-//		return mapperFactory.getMapper(domainObject).delete(domainObject);
-//	}
+	public int delete(DomainObject domainObject) {
+		return mapperFactory.getMapper(domainObject).delete(domainObject);
+	}
+	
+	public boolean save(DomainObject obj) {
+		if(obj.isNew()) {
+			return insert(obj) > 0;
+		} else {
+			return update(obj) > 0;
+		}
+	}
+
+	public ArrayList<AuctionItem> findAllAuctionItemsByCategory(long categoryId) {
+		AuctionItemMapper mapper = 
+				(AuctionItemMapper)mapperFactory.getMapper(AuctionItem.class);
+		return mapper.findAllByCategory(categoryId);
+	}
+
+	public User findUserByOpenId(String identifier) {
+		UserMapper mapper = (UserMapper) mapperFactory.getMapper(User.class);
+		return mapper.findByOpenId(identifier);
+	}
 }

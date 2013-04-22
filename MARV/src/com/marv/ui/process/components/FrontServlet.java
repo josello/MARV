@@ -1,6 +1,8 @@
 package com.marv.ui.process.components;
 
 import java.io.IOException;
+
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -14,8 +16,13 @@ import com.marv.util.operationalmanagement.ApplicationException;
 /**
  * Servlet implementation class FrontServlet
  */
-@WebServlet("/FrontServlet")
+@WebServlet("/default.jsp")
 public class FrontServlet extends HttpServlet {
+	
+	private static final String GATEWAYS_PACKAGE = "com.marv.persistence.gateways";
+	
+	private static final String COMMANDS_PACKAGE = "com.marv.ui.process.components.commands";
+	
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -43,7 +50,9 @@ public class FrontServlet extends HttpServlet {
 	 */
 	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
+		FrontCommand command = getCommand(request);
+		command.init(getServletContext(), request, response);
+		command.processPost();
 	}
 
 	private FrontCommand getCommand(HttpServletRequest request) {
@@ -56,8 +65,16 @@ public class FrontServlet extends HttpServlet {
 
 	private Class<?> getCommandClass(HttpServletRequest request) {
 		Class<?> result;
-		final String commandClassName = "com.marv.ui.process.components.commands."
-				+ (String) request.getParameter("command") + "Command";
+		String command = request.getParameter("command");
+		if(command == null) {
+			command = "Home";
+		}
+		final String commandClassName;
+		if(command.equals("SignIn")) {
+			commandClassName = GATEWAYS_PACKAGE + "." + command + "Command";
+		} else {
+			commandClassName = COMMANDS_PACKAGE + "." + command + "Command";
+		}
 		try {
 			result = Class.forName(commandClassName);
 		} catch (ClassNotFoundException e) {
